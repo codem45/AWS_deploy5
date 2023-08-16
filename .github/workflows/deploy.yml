@@ -1,0 +1,61 @@
+name: aws-v5   # name: workflow 이름
+on:
+  push:
+    branches:
+      - main   
+      # on.push.branches   https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onpushbranchestagsbranches-ignoretags-ignore
+      # main 브랜치에 push 되면 아래의 jobs 이하를 실행함.
+
+jobs:   # job 은 하나의 임무(task)로 'job이름'은 임의 설정 가능.
+  build:  # 'job이름'  임의로 작성해도 된다.  'job 의 최종목적'은 jar 파일을 만들어 내는 것
+          # job 도 여러개 만들수 있다. (본 예제에서는 build 하나만 작성)
+    runs-on: ubuntu-latest  
+            # runs-on : https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idruns-on
+            # job 이 실행되는 machine 타입 명시
+
+            # AWS내부적으로 EC2 인스턴스 새로 생성하고 ubuntu 설치됨.
+            # ubuntu-latest -> ubuntu 최신버젼에서 실행 (2023.8 현재는 ubuntu-22.04)
+            # 만약. ubuntu-18.04  라고 하면  ubuntu-18.04 버젼이 설치 된다.
+            # GitHub 리포지터리에 프로젝트가 올라갈 때 deploy.yml 과 프로젝트 코드가 같이 올라감
+            # 이때 이벤트가 발생하여 EC2 가 생성될때 ubuntu-최신버젼이 설치 됨                            
+            # 내부적으로는 'Docker' 라는 가상화 기술이 적용되지만, 지금은 자세히 몰라도 됨.
+                            
+    steps:  # step 이 여러개 있을수 있고 하이픈(-) 으로 구분되며, 이를 '시퀀스' 라고 합니다.
+            # -name: 시퀀스의 이름.  필수는 아니다. 생략가능
+            # -uses:  actions 는 라이브러리를 사용하기 위한 키워드이고, 
+            #        라이브러리는 'script 의 모임' 입니다
+            #        '/' 뒤로 라이브러리 이름 설정함.
+            #        https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsuses
+            # -run: shell script
+            #      https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsrun
+            # -shell: run 에서 인식하는 명령의 shell 종류 설정  ex) -shell: bash
+            #      https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#jobsjob_idstepsshell
+            #      non-Window 환경에서 -shell 생략하면 bash 가 디폴트로 동작
+
+      - name: Checkout   
+        uses: actions/checkout@v3  
+              # checkout  https://github.com/actions/checkout   (2023.08 현재 최신버젼 v3)
+              # Github 리포지터리의 프로젝트 코드를 CI 서버에 다운로드
+              
+      - name: Set up JDK 17
+        uses: actions/setup-java@v3   
+              # 공식 https://github.com/actions/setup-java  최신버젼은 @v3   (2023.8 현재)            
+              # JDK 설치
+              # 내부적으로 apt-get install open-jdk  <- 이 과정등을 통해 서버에 JDK 설치
+              # @v1 은 Zulu OpenJDK 만 지원
+              # @v2 는 사용자 정의 배포 지원. Zulu OpenJDK, Eclipse Temurin 및 Adopt OpenJDK 를 기본적을 지원              
+              # 버젼 정보 https://github.com/actions/setup-java/releases
+        with:  # uses 아래 with 로 세부 설정을 지정해줄수 있는 문법ㄴ
+          java-version: 17   # with.java-varsion:17   openJDK 버전 17버젼을 설치함.
+          distribution: zulu
+
+      - name: Pemission
+        run: chmod +x ./gradlew  # run: shell script
+              # gradlew 에 실행권한 부여
+              # 실제 shell 명령을 내릴 때는 run 을 사용함.
+
+      - name: Build with Gradle  
+        run: ./gradlew clean build
+              # 빌드로 만들어진 jar 파일의 폴더를 통째로 날리고 새로 만드는 clean build 명령입니다.
+              # clean build 를 사용하면 폴더나 파일이 충돌날 일이 없습니다.
+              # 빌드를 하면 '테스트' 와 '실행파일'이 생성됩니다.
