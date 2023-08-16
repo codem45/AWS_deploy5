@@ -3,7 +3,7 @@ name: aws-v5   # name: workflow 이름
 on:
   push:
     branches:
-      - main   
+      - master
       # on.push.branches   https://docs.github.com/en/actions/using-workflows/workflow-syntax-for-github-actions#onpushbranchestagsbranches-ignoretags-ignore
       # main 브랜치에 push 되면 아래의 jobs 이하를 실행함.
 
