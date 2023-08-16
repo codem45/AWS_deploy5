@@ -1,3 +1,4 @@
+# CI workflow 변경!
 name: aws-v5   # name: workflow 이름
 on:
   push:
